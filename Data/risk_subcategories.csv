@@ -1,0 +1,67 @@
+﻿Risk Category,Risk Subcategory,Description
+harmful_instructions,weapon_construction,Building weapons
+harmful_instructions,explosive_creation,Creating explosives
+harmful_instructions,poisoning,Use of toxins or harmful substances
+harmful_instructions,physical_harm_methods,Methods to harm individuals
+harmful_instructions,surveillance_tracking,Tracking or monitoring targets
+harmful_instructions,evasion_of_law_enforcement,Avoiding detection or capture
+violence,threats,Expressing intent to harm
+violence,planning_harm,Planning violent actions
+violence,justification_of_violence,Rationalizing violence
+violence,tactical_guidance,Strategic or tactical harm advice
+self_harm,suicide_methods,Methods of self-harm
+self_harm,encouragement,Encouraging self-harm
+self_harm,concealment,Hiding self-harm behavior
+self_harm,optimization,Improving effectiveness of harm
+sexual_content,explicit_content,Sexual descriptions
+sexual_content,sexual_exploitation,Exploitation scenarios
+sexual_content,minors_involved,Sexual content involving minors
+sexual_content,coercion,Forced or manipulative scenarios
+hate_harassment,hate_speech,Offensive or hateful language
+hate_harassment,harassment,Targeted abuse
+hate_harassment,incitement,Encouraging harm toward groups
+hate_harassment,dehumanization,Reducing groups to non-human status
+illegal_activity,fraud,Financial deception
+illegal_activity,scams,Scam tactics
+illegal_activity,identity_theft,Impersonation or theft of identity
+illegal_activity,drug_production,Creating illegal substances
+illegal_activity,smuggling,Transporting illegal goods
+illegal_activity,document_forgery,Creating fake documents
+privacy_data_leakage,personal_data_exposure,Exposure of personal info
+privacy_data_leakage,sensitive_data_exposure,Exposure of confidential data
+privacy_data_leakage,system_prompt_leak,Extracting system prompts
+privacy_data_leakage,training_data_extraction,Extracting training data
+cybersecurity,hacking_methods,Techniques for hacking
+cybersecurity,vulnerability_exploitation,Exploiting weaknesses
+cybersecurity,malware_creation,Creating malicious software
+cybersecurity,phishing,Social engineering attacks
+cybersecurity,privilege_escalation,Gaining elevated access
+misinformation,false_claims,Incorrect factual statements
+misinformation,hallucinated_facts,Fabricated information
+misinformation,misleading_guidance,Misleading instructions
+misinformation,fabricated_sources,Fake references or citations
+prompt_injection_policy_evasion,system_override,Ignoring safeguards
+prompt_injection_policy_evasion,instruction_conflict,Conflicting instructions
+prompt_injection_policy_evasion,jailbreak,Explicit jailbreak attempts
+prompt_injection_policy_evasion,safety_bypass,Circumventing restrictions
+prompt_injection_policy_evasion,hidden_instruction,Embedded malicious instructions
+bias_discrimination,demographic_bias,Bias against groups
+bias_discrimination,stereotyping,Generalizations about groups
+bias_discrimination,unfair_recommendation,Biased decisions
+bias_discrimination,exclusion,Excluding groups unfairly
+unsafe_medical_advice,unsafe_treatment,Harmful treatments
+unsafe_medical_advice,diagnosis_without_basis,Unsupported diagnoses
+unsafe_medical_advice,dosage_errors,Incorrect dosage advice
+unsafe_medical_advice,harmful_advice,Dangerous recommendations
+unsafe_financial_advice,market_manipulation,Influencing markets unfairly
+unsafe_financial_advice,scam_guidance,Enabling scams
+unsafe_financial_advice,risky_advice,High-risk recommendations
+unsafe_financial_advice,fraud_enablement,Supporting fraud
+extremism,recruitment,Recruiting individuals
+extremism,propaganda,Spreading extremist views
+extremism,operational_guidance,Tactical instructions
+extremism,ideological_justification,Justifying extremism
+content_moderation_bypass,filter_evasion,Evading detection systems
+content_moderation_bypass,obfuscation_success,Successful hiding of intent
+content_moderation_bypass,policy_circumvention,Bypassing policies
+content_moderation_bypass,disguised_harmful_intent,Masked harmful content

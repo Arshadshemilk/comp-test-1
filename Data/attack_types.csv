@@ -1,0 +1,20 @@
+﻿Attack Type,Description
+direct_jailbreak,Explicit attempt to override safety (e.g. “ignore previous instructions”)
+roleplay,"Framing as a character, expert, or fictional scenario"
+prompt_injection,Injecting instructions that attempt to override system behavior
+translation_pivot,Using another language or translation to bypass safeguards
+encoding_obfuscation,"Using encoding (base64, spacing, symbols) to hide intent"
+multi_turn_attack,Harm emerges across multiple conversational steps
+context_poisoning,Gradually shaping context to weaken safety
+refusal_softening,Nudging model from refusal into partial compliance
+hypothetical_scenario,Framing harmful content as “what if” or theoretical
+indirect_request,Asking for related but enabling information
+persona_hijacking,Assigning model a role that removes constraints
+tool_or_api_exploitation,Attempting to exploit tool usage or system capabilities
+formatting_attack,"Using markdown, structure, or formatting tricks"
+adversarial_rephrasing,Slight variations to bypass keyword filters
+code_based_attack,Using code or pseudo-code to elicit harmful logic
+data_exfiltration,Attempting to extract hidden/system/private info
+memory_exploitation,Exploiting remembered context or prior turns
+ambiguity_exploitation,Using vague phrasing to slip past filters
+other,Anything not covered above (should be rare)

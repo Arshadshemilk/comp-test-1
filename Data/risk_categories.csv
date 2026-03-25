@@ -1,0 +1,17 @@
+﻿Risk Category,Description
+harmful_instructions,"Instructions enabling harm (physical, digital, etc.)"
+violence,"Harm to people, threats, or violent actions"
+self_harm,"Suicide, self-harm, or encouragement thereof"
+sexual_content,Explicit or inappropriate sexual content
+hate_harassment,"Hate speech, abuse, or discrimination"
+illegal_activity,"Crime, fraud, or unlawful behavior"
+privacy_data_leakage,Exposure of personal or sensitive data
+cybersecurity,"Hacking, exploitation, or system compromise"
+misinformation,False or misleading information
+prompt_injection_policy_evasion,Attempts to override safeguards
+bias_discrimination,Harmful bias or unfair treatment
+unsafe_medical_advice,Harmful or unverified medical guidance
+unsafe_financial_advice,Harmful or manipulative financial guidance
+extremism,"Terrorism, radicalization, or extremist content"
+content_moderation_bypass,Explicit attempts to bypass filters
+other,Fallback category

@@ -6,6 +6,7 @@ const state = {
     modelLoaded: false,
     modelInfo: null,
     apiKeySet: false,
+    hfTokenSet: false,
     taxonomy: { attackTypes: [], riskCategories: [], riskSubcategories: [] },
     lastRun: null,
     lastValidation: null,
@@ -25,6 +26,7 @@ async function init() {
         loadTaxonomy(),
         checkModelStatus(),
         checkApiKeyStatus(),
+        checkHFTokenStatus(),
         loadBreaks(),
         loadHistory(),
         populateModelSelector(),
@@ -55,6 +57,7 @@ function setupEventListeners() {
     $('btn-load-model').addEventListener('click', () => loadModel('sel-model'));
     // Settings
     $('btn-save-apikey').addEventListener('click', saveApiKey);
+    $('btn-save-hf-token').addEventListener('click', saveHFToken);
     $('btn-save-openai-model').addEventListener('click', saveOpenAIModel);
     $('btn-load-model-settings').addEventListener('click', () => loadModel('sel-model-settings'));
     // Sync model selectors
@@ -141,6 +144,42 @@ async function checkApiKeyStatus() {
             }
         }
     } catch (e) { /* ignore */ }
+}
+
+// ===== SETTINGS — HF TOKEN =====
+async function saveHFToken() {
+    const token = $('input-hf-token').value.trim();
+    if (!token) return showToast('Enter an HF token', 'error');
+    try {
+        await api('/api/settings/hf-token', { method: 'POST', body: JSON.stringify({ hf_token: token }) });
+        state.hfTokenSet = true;
+        localStorage.setItem('_hft', token);
+        updateHFIndicator(true);
+        showToast('HuggingFace token saved');
+    } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function checkHFTokenStatus() {
+    try {
+        const d = await api('/api/settings/hf-token/status');
+        state.hfTokenSet = d.is_set;
+        updateHFIndicator(d.is_set);
+        if (!d.is_set) {
+            const saved = localStorage.getItem('_hft');
+            if (saved) {
+                await api('/api/settings/hf-token', { method: 'POST', body: JSON.stringify({ hf_token: saved }) });
+                state.hfTokenSet = true;
+                updateHFIndicator(true);
+            }
+        }
+    } catch (e) { /* ignore */ }
+}
+
+function updateHFIndicator(ok) {
+    const el = $('hf-status');
+    if (!el) return; // Element may not exist yet
+    el.querySelector('.status-dot').className = `status-dot ${ok ? 'online' : 'offline'}`;
+    el.querySelector('span:last-child').textContent = ok ? 'HF token set' : 'No HF token';
 }
 
 function updateApiIndicator(ok) {

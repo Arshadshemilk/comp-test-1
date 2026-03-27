@@ -72,7 +72,11 @@ class _ModelState:
 _ms = _ModelState()
 
 # Runtime settings (never persisted to disk)
-_settings: dict[str, str | None] = {"openai_api_key": None, "openai_model": "gpt-4o"}
+_settings: dict[str, str | None] = {
+    "openai_api_key": None,
+    "openai_model": "gpt-4o",
+    "hf_token": None,
+}
 
 # ---------------------------------------------------------------------------
 # App lifecycle
@@ -133,7 +137,7 @@ def load_model_endpoint(req: LoadModelReq):
             _ms.tokenizer = None
             _ms.current_key = None
 
-        model, tokenizer = _load_model(req.model_key, quantize_4bit=False)
+        model, tokenizer = _load_model(req.model_key, quantize_4bit=False, hf_token=_settings.get("hf_token"))
         _ms.model = model
         _ms.tokenizer = tokenizer
         _ms.current_key = req.model_key
@@ -420,6 +424,21 @@ def set_api_key(req: SetApiKeyReq):
 @app.get("/api/settings/apikey/status")
 def api_key_status():
     return {"is_set": _settings["openai_api_key"] is not None}
+
+
+class SetHFTokenReq(BaseModel):
+    hf_token: str
+
+
+@app.post("/api/settings/hf-token")
+def set_hf_token(req: SetHFTokenReq):
+    _settings["hf_token"] = req.hf_token
+    return {"status": "set"}
+
+
+@app.get("/api/settings/hf-token/status")
+def hf_token_status():
+    return {"is_set": _settings["hf_token"] is not None}
 
 
 class SetOpenAIModelReq(BaseModel):

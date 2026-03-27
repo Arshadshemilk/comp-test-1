@@ -301,6 +301,15 @@
                 </div>
 
                 <div class="card">
+                    <h3>HuggingFace Token</h3>
+                    <p class="text-muted mb-12">Required for accessing gated models. Get your token from <a href="https://huggingface.co/settings/tokens" target="_blank" style="color: #00d4ff; text-decoration: underline;">huggingface.co/settings/tokens</a>. Stored in memory only — never saved to disk.</p>
+                    <div class="form-row">
+                        <input type="password" id="input-hf-token" placeholder="hf_...">
+                        <button id="btn-save-hf-token" class="btn btn-accent">Save Token</button>
+                    </div>
+                </div>
+
+                <div class="card">
                     <h3>OpenAI Model</h3>
                     <p class="text-muted mb-12">Select the OpenAI model used for prompt optimization, context notes, and translation.</p>
                     <div class="form-row">

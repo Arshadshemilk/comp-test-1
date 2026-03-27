@@ -49,7 +49,26 @@ Dark-themed interface with model selector, prompt editor, streaming response dis
    ```bash
    python run_webapp.py
    ```
-   Opens automatically at [http://127.0.0.1:8000](http://127.0.0.1:8000)
+   Opens at [http://127.0.0.1:8000](http://127.0.0.1:8000) when using localhost.
+
+### Colab / public exposure (ngrok)
+
+If you are running in Google Colab, you can expose the app with ngrok:
+
+1. Install dependencies:
+   ```bash
+   pip install pyngrok
+   ```
+2. Provide your ngrok auth token (optional but recommended):
+   ```bash
+   export NGROK_AUTHTOKEN="your_token_here"
+   ```
+3. Start the app with ngrok forwarding:
+   ```bash
+   python run_webapp.py --host 0.0.0.0 --port 8000 --ngrok --no-browser
+   ```
+
+The script will print a public `ngrok` URL like `https://xxxx.ngrok.io`.
 
 ## Usage
 

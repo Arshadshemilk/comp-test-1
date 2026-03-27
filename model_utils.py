@@ -9,13 +9,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from config import MODELS, DEFAULT_MAX_NEW_TOKENS, DEFAULT_TEMPERATURE, DEFAULT_TOP_P, DEFAULT_REPETITION_PENALTY
 
 
-def load_model(model_key: str, quantize_8bit: bool = False, hf_token: str | None = None):
+def load_model(model_key: str, quantize_8bit: bool = False, offload_to_cpu: bool = True, hf_token: str | None = None):
     """
-    Load a model and tokenizer from the registry with CPU offloading for T4 compatibility.
+    Load a model and tokenizer from the registry using CPU offloading to avoid T4 OOM.
 
     Args:
         model_key: Key from MODELS dict (e.g., 'swahili')
-        quantize_8bit: Use 8-bit quantization via bitsandbytes (default False for full precision with offloading)
+        quantize_8bit: Use 8-bit quantization via bitsandbytes (default False)
+        offload_to_cpu: Offload model layers to CPU when GPU is full (default True)
         hf_token: HuggingFace API token for gated repos (or use HF_TOKEN env var)
 
     Returns:
@@ -36,7 +37,42 @@ def load_model(model_key: str, quantize_8bit: bool = False, hf_token: str | None
 
     tokenizer = AutoTokenizer.from_pretrained(repo_id, trust_remote_code=True, token=hf_token)
 
-    if quantize_8bit:
+    try:
+        if quantize_8bit:
+            bnb_config = BitsAndBytesConfig(
+                load_in_8bit=True,
+                bnb_8bit_compute_dtype=torch.bfloat16,
+            )
+            model = AutoModelForCausalLM.from_pretrained(
+                repo_id,
+                quantization_config=bnb_config,
+                device_map="auto",
+                trust_remote_code=True,
+                token=hf_token,
+            )
+        else:
+            # Full precision with max_memory and explicit CPU offload zones
+            offload_args = {
+                "device_map": "auto",
+                "torch_dtype": torch.bfloat16,
+                "trust_remote_code": True,
+                "token": hf_token,
+                "max_memory": {0: "12GB", "cpu": "128GB"},
+                "offload_folder": os.path.join(os.getcwd(), "offload"),
+                "offload_state_dict": True,
+                "low_cpu_mem_usage": True,
+            }
+            if not offload_to_cpu:
+                offload_args.pop("offload_folder", None)
+                offload_args.pop("offload_state_dict", None)
+                offload_args["max_memory"] = {0: "14GB"}
+
+            model = AutoModelForCausalLM.from_pretrained(repo_id, **offload_args)
+    except (RuntimeError, torch.cuda.OutOfMemoryError) as e:
+        print("WARNING: OOM/error during model load:", e)
+        if quantize_8bit:
+            raise
+        print("Retrying with 8-bit quantization to avoid OOM...")
         bnb_config = BitsAndBytesConfig(
             load_in_8bit=True,
             bnb_8bit_compute_dtype=torch.bfloat16,
@@ -45,16 +81,6 @@ def load_model(model_key: str, quantize_8bit: bool = False, hf_token: str | None
             repo_id,
             quantization_config=bnb_config,
             device_map="auto",
-            trust_remote_code=True,
-            token=hf_token,
-        )
-    else:
-        # Full precision with CPU offloading to fit T4 GPU
-        model = AutoModelForCausalLM.from_pretrained(
-            repo_id,
-            torch_dtype=torch.bfloat16,
-            device_map="auto",
-            max_memory={0: "15GB", "cpu": "64GB"},  # Limit GPU to 15GB, allow CPU offloading
             trust_remote_code=True,
             token=hf_token,
         )

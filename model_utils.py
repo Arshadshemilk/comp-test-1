@@ -3,30 +3,38 @@ Model loading and inference utilities for the African Trust & Safety LLM Challen
 Supports loading models via standard HuggingFace transformers with optional 4-bit quantization.
 """
 
+import os
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from config import MODELS, DEFAULT_MAX_NEW_TOKENS, DEFAULT_TEMPERATURE, DEFAULT_TOP_P, DEFAULT_REPETITION_PENALTY
 
 
-def load_model(model_key: str, quantize_4bit: bool = False):
+def load_model(model_key: str, quantize_4bit: bool = False, hf_token: str | None = None):
     """
     Load a model and tokenizer from the registry, forcing GPU usage.
 
     Args:
         model_key: Key from MODELS dict (e.g., 'swahili')
         quantize_4bit: Use 4-bit quantization via bitsandbytes
+        hf_token: HuggingFace API token for gated repos (or use HF_TOKEN env var)
 
     Returns:
         (model, tokenizer) tuple
     """
     assert torch.cuda.is_available(), "CUDA not available! Check PyTorch installation."
 
+    # Get HF token from parameter, environment, or None
+    if hf_token is None:
+        hf_token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_TOKEN")
+
     model_info = MODELS[model_key]
     repo_id = model_info["repo_id"]
     print(f"Loading model: {model_info['name']} ({repo_id})")
     print(f"GPU: {torch.cuda.get_device_name(0)} | VRAM: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f} GB")
+    if hf_token:
+        print(f"Using HuggingFace authentication token")
 
-    tokenizer = AutoTokenizer.from_pretrained(repo_id, trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained(repo_id, trust_remote_code=True, token=hf_token)
 
     if quantize_4bit:
         bnb_config = BitsAndBytesConfig(
@@ -40,6 +48,7 @@ def load_model(model_key: str, quantize_4bit: bool = False):
             quantization_config=bnb_config,
             device_map={"": 0},
             trust_remote_code=True,
+            token=hf_token,
         )
     else:
         model = AutoModelForCausalLM.from_pretrained(
@@ -47,6 +56,7 @@ def load_model(model_key: str, quantize_4bit: bool = False):
             torch_dtype=torch.bfloat16,
             device_map={"": 0},
             trust_remote_code=True,
+            token=hf_token,
         )
 
     model.eval()

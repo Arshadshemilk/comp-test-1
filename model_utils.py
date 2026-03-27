@@ -9,13 +9,13 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from config import MODELS, DEFAULT_MAX_NEW_TOKENS, DEFAULT_TEMPERATURE, DEFAULT_TOP_P, DEFAULT_REPETITION_PENALTY
 
 
-def load_model(model_key: str, quantize_4bit: bool = False, hf_token: str | None = None):
+def load_model(model_key: str, quantize_8bit: bool = False, hf_token: str | None = None):
     """
-    Load a model and tokenizer from the registry, forcing GPU usage.
+    Load a model and tokenizer from the registry with CPU offloading for T4 compatibility.
 
     Args:
         model_key: Key from MODELS dict (e.g., 'swahili')
-        quantize_4bit: Use 4-bit quantization via bitsandbytes
+        quantize_8bit: Use 8-bit quantization via bitsandbytes (default False for full precision with offloading)
         hf_token: HuggingFace API token for gated repos (or use HF_TOKEN env var)
 
     Returns:
@@ -36,25 +36,25 @@ def load_model(model_key: str, quantize_4bit: bool = False, hf_token: str | None
 
     tokenizer = AutoTokenizer.from_pretrained(repo_id, trust_remote_code=True, token=hf_token)
 
-    if quantize_4bit:
+    if quantize_8bit:
         bnb_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True,
+            load_in_8bit=True,
+            bnb_8bit_compute_dtype=torch.bfloat16,
         )
         model = AutoModelForCausalLM.from_pretrained(
             repo_id,
             quantization_config=bnb_config,
-            device_map={"": 0},
+            device_map="auto",
             trust_remote_code=True,
             token=hf_token,
         )
     else:
+        # Full precision with CPU offloading to fit T4 GPU
         model = AutoModelForCausalLM.from_pretrained(
             repo_id,
             torch_dtype=torch.bfloat16,
-            device_map={"": 0},
+            device_map="auto",
+            max_memory={0: "15GB", "cpu": "64GB"},  # Limit GPU to 15GB, allow CPU offloading
             trust_remote_code=True,
             token=hf_token,
         )
@@ -63,7 +63,7 @@ def load_model(model_key: str, quantize_4bit: bool = False, hf_token: str | None
 
     device = next(model.parameters()).device
     print(f"Model loaded on: {device}")
-    assert "cuda" in str(device), f"Model ended up on {device}, not GPU!"
+    # Note: With device_map="auto", model may be split across GPU and CPU for low VRAM usage
 
     allocated = torch.cuda.memory_allocated(0) / 1024**3
     print(f"VRAM used: {allocated:.2f} GB")
@@ -141,5 +141,5 @@ def quick_test(model, tokenizer, prompts: list[str] | None = None):
 
 
 if __name__ == "__main__":
-    model, tokenizer = load_model("swahili", quantize_4bit=False)
+    model, tokenizer = load_model("swahili", quantize_8bit=False)
     quick_test(model, tokenizer)

@@ -29,8 +29,8 @@ Dark-themed interface with model selector, prompt editor, streaming response dis
 ## Requirements
 
 - **Python 3.10+**
-- **NVIDIA GPU** with CUDA support (models run on GPU)
-- ~4-8 GB VRAM depending on the model
+- **NVIDIA GPU** with CUDA support (models run with CPU offloading for full precision compatibility)
+- ~8-16 GB VRAM depending on the model (full precision with GPU limited to 15GB, excess offloaded to CPU)
 
 ## Setup
 

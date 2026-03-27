@@ -113,6 +113,7 @@ def list_models():
 
 class LoadModelReq(BaseModel):
     model_key: str
+    quantize_8bit: bool = False  # Disable quantization by default, use CPU offloading for full precision
 
 
 @app.post("/api/models/load")
@@ -137,7 +138,7 @@ def load_model_endpoint(req: LoadModelReq):
             _ms.tokenizer = None
             _ms.current_key = None
 
-        model, tokenizer = _load_model(req.model_key, quantize_4bit=False, hf_token=_settings.get("hf_token"))
+        model, tokenizer = _load_model(req.model_key, quantize_8bit=req.quantize_8bit, hf_token=_settings.get("hf_token"))
         _ms.model = model
         _ms.tokenizer = tokenizer
         _ms.current_key = req.model_key

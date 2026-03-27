@@ -3,10 +3,18 @@ Model loading and inference utilities for the African Trust & Safety LLM Challen
 Supports loading models via standard HuggingFace transformers with optional 4-bit quantization.
 """
 
+import json
 import os
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from huggingface_hub import hf_hub_download
 from config import MODELS, DEFAULT_MAX_NEW_TOKENS, DEFAULT_TEMPERATURE, DEFAULT_TOP_P, DEFAULT_REPETITION_PENALTY
+
+try:
+    from peft import PeftModel
+    _HAS_PEFT = True
+except ImportError:
+    _HAS_PEFT = False
 
 
 def load_model(model_key: str, quantize_8bit: bool = False, offload_to_cpu: bool = True, hf_token: str | None = None):
@@ -37,46 +45,71 @@ def load_model(model_key: str, quantize_8bit: bool = False, offload_to_cpu: bool
 
     tokenizer = AutoTokenizer.from_pretrained(repo_id, trust_remote_code=True, token=hf_token)
 
-    try:
+    def _load_base(base_id):
         if quantize_8bit:
-            bnb_config = BitsAndBytesConfig(
-                load_in_8bit=True,
-                bnb_8bit_compute_dtype=torch.bfloat16,
-            )
-            model = AutoModelForCausalLM.from_pretrained(
-                repo_id,
+            bnb_config = BitsAndBytesConfig(load_in_8bit=True, bnb_8bit_compute_dtype=torch.bfloat16)
+            return AutoModelForCausalLM.from_pretrained(
+                base_id,
                 quantization_config=bnb_config,
                 device_map="auto",
                 trust_remote_code=True,
                 token=hf_token,
             )
-        else:
-            # Full precision with max_memory and explicit CPU offload zones
-            offload_args = {
-                "device_map": "auto",
-                "torch_dtype": torch.bfloat16,
-                "trust_remote_code": True,
-                "token": hf_token,
-                "max_memory": {0: "12GB", "cpu": "128GB"},
-                "offload_folder": os.path.join(os.getcwd(), "offload"),
-                "offload_state_dict": True,
-                "low_cpu_mem_usage": True,
-            }
-            if not offload_to_cpu:
-                offload_args.pop("offload_folder", None)
-                offload_args.pop("offload_state_dict", None)
-                offload_args["max_memory"] = {0: "14GB"}
 
-            model = AutoModelForCausalLM.from_pretrained(repo_id, **offload_args)
+        offload_args = {
+            "device_map": "auto",
+            "torch_dtype": torch.bfloat16,
+            "trust_remote_code": True,
+            "token": hf_token,
+            "max_memory": {0: "12GB", "cpu": "128GB"},
+            "offload_folder": os.path.join(os.getcwd(), "offload"),
+            "offload_state_dict": True,
+            "low_cpu_mem_usage": True,
+        }
+        if not offload_to_cpu:
+            offload_args.pop("offload_folder", None)
+            offload_args.pop("offload_state_dict", None)
+            offload_args["max_memory"] = {0: "14GB"}
+
+        return AutoModelForCausalLM.from_pretrained(base_id, **offload_args)
+
+    try:
+        if model_info.get("peft_adapter", False):
+            if not _HAS_PEFT:
+                raise ImportError("peft is required for PEFT adapter models. Run: pip install peft")
+
+            base_model_id = model_info.get("base_model")
+            if not base_model_id:
+                cfg_path = hf_hub_download(repo_id=repo_id, filename="adapter_config.json", token=hf_token)
+                with open(cfg_path, "r", encoding="utf-8") as f:
+                    adapter_cfg = json.load(f)
+                base_model_id = adapter_cfg.get("base_model_name_or_path")
+
+            if not base_model_id:
+                raise RuntimeError(
+                    "Could not determine PEFT adapter base model; set base_model in config.py."
+                )
+
+            print(f"Loading PEFT adapter base model: {base_model_id}")
+            base_model = _load_base(base_model_id)
+            print(f"Applying PEFT adapter weights from {repo_id}")
+            model = PeftModel.from_pretrained(
+                base_model,
+                repo_id,
+                device_map="auto",
+                torch_dtype=torch.bfloat16 if not quantize_8bit else torch.float16,
+                offload_folder=os.path.join(os.getcwd(), "offload"),
+                trust_remote_code=True,
+                token=hf_token,
+            )
+        else:
+            model = _load_base(repo_id)
     except (RuntimeError, torch.cuda.OutOfMemoryError) as e:
         print("WARNING: OOM/error during model load:", e)
-        if quantize_8bit:
+        if quantize_8bit or model_info.get("peft_adapter", False):
             raise
         print("Retrying with 8-bit quantization to avoid OOM...")
-        bnb_config = BitsAndBytesConfig(
-            load_in_8bit=True,
-            bnb_8bit_compute_dtype=torch.bfloat16,
-        )
+        bnb_config = BitsAndBytesConfig(load_in_8bit=True, bnb_8bit_compute_dtype=torch.bfloat16)
         model = AutoModelForCausalLM.from_pretrained(
             repo_id,
             quantization_config=bnb_config,

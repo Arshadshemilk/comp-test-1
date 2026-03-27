@@ -33,6 +33,8 @@ MODELS = {
         "repo_id": "EthioNLP/Amharic_LLAMA_our_data",
         "language": "Amharic",
         "architecture": "llama",
+        "peft_adapter": True,
+        "base_model": "meta-llama/Llama-2-7b-hf",  # local base for adapter (requires HF token)
     },
 }
 
